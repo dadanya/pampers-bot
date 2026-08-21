@@ -9,21 +9,16 @@ from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
+from identity import load_sender_aliases_raw
+
 if TYPE_CHECKING:
     from memory import MemoryStore
 
 
 def _load_retired_handle_fragment() -> str:
-    import os
-
-    path = os.path.join(os.path.dirname(__file__), "sender_aliases.json")
-    try:
-        with open(path, "r", encoding="utf-8") as f:
-            data = json.load(f)
-        handles = [re.escape(h) for h in data.get("retired_self_handles", [])]
-        return "".join(f"{h}|" for h in handles)
-    except Exception:
-        return ""
+    data = load_sender_aliases_raw()
+    handles = [re.escape(h) for h in data.get("retired_self_handles", [])]
+    return "".join(f"{h}|" for h in handles)
 
 
 _LEGACY_SELF_REFERENCE = re.compile(

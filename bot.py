@@ -20,7 +20,7 @@ from google.genai import types as genai_types
 from dotenv import load_dotenv
 
 from aggression import build_conditional_aggression_instruction
-from identity import canonical_from_telegram, normalize_alias
+from identity import canonical_from_telegram, load_sender_aliases_raw, normalize_alias
 from memory import MemoryContext, MemoryStore, MessageRecord, render_memory_instruction
 from memory_summaries import (
     EpisodeSummarizer,
@@ -94,14 +94,9 @@ def remove_em_dash(text: str) -> str:
 
 
 def _load_retired_handle_fragment() -> str:
-    path = os.path.join(os.path.dirname(__file__), "sender_aliases.json")
-    try:
-        with open(path, "r", encoding="utf-8") as f:
-            data = json.load(f)
-        handles = [re.escape(h) for h in data.get("retired_self_handles", [])]
-        return "|".join(handles) + "|" if handles else ""
-    except Exception:
-        return ""
+    data = load_sender_aliases_raw()
+    handles = [re.escape(h) for h in data.get("retired_self_handles", [])]
+    return "|".join(handles) + "|" if handles else ""
 
 
 RETIRED_SELF_NAME_PATTERN = re.compile(
@@ -471,19 +466,15 @@ def is_question_like(text: str) -> bool:
 
 
 def _load_sender_aliases() -> tuple[dict, dict]:
-    path = os.path.join(os.path.dirname(__file__), "sender_aliases.json")
-    try:
-        with open(path, "r", encoding="utf-8") as f:
-            data = json.load(f)
-        username_aliases = {k: tuple(v) for k, v in data.get("username_aliases", {}).items()}
-        name_aliases = {k: tuple(v) for k, v in data.get("name_aliases", {}).items()}
-        return username_aliases, name_aliases
-    except FileNotFoundError:
-        logger.warning("sender_aliases.json не найден — обращение по имени/роду для участников отключено")
-        return {}, {}
-    except Exception:
-        logger.exception("Не удалось загрузить sender_aliases.json — обращение по имени/роду отключено")
-        return {}, {}
+    data = load_sender_aliases_raw()
+    if not data:
+        logger.warning(
+            "sender_aliases.json/SENDER_ALIASES_JSON не найдены — "
+            "обращение по имени/роду для участников отключено"
+        )
+    username_aliases = {k: tuple(v) for k, v in data.get("username_aliases", {}).items()}
+    name_aliases = {k: tuple(v) for k, v in data.get("name_aliases", {}).items()}
+    return username_aliases, name_aliases
 
 
 SENDER_USERNAME_ALIASES, SENDER_NAME_ALIASES = _load_sender_aliases()

@@ -6,13 +6,31 @@ import re
 import unicodedata
 
 
-def _load_alias_tables() -> tuple[dict, dict, dict]:
+def load_sender_aliases_raw() -> dict:
+    """Load the sender-aliases config.
+
+    Checks the SENDER_ALIASES_JSON env var first (its value is the JSON
+    content itself, not a path) — this is how a host like Railway, which
+    doesn't get sender_aliases.json from git, can supply it. Falls back to
+    the local file for normal/local runs. Returns {} if neither is available
+    so callers degrade gracefully instead of crashing.
+    """
+    env_value = os.environ.get("SENDER_ALIASES_JSON")
+    if env_value:
+        try:
+            return json.loads(env_value)
+        except Exception:
+            return {}
     path = os.path.join(os.path.dirname(__file__), "sender_aliases.json")
     try:
         with open(path, "r", encoding="utf-8") as f:
-            data = json.load(f)
+            return json.load(f)
     except Exception:
-        return {}, {}, {}
+        return {}
+
+
+def _load_alias_tables() -> tuple[dict, dict, dict]:
+    data = load_sender_aliases_raw()
     archive = dict(data.get("archive_aliases", {}))
     username = {k: v[0] for k, v in data.get("username_aliases", {}).items()}
     display = {k: v[0] for k, v in data.get("name_aliases", {}).items()}
