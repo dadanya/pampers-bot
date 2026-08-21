@@ -1,0 +1,19 @@
+{
+  "$schema": "https://schema.railpack.com",
+  "buildAptPackages": ["curl", "ca-certificates"],
+  "steps": {
+    "install-higgsfield": {
+      "commands": [
+        "curl -fsSL https://raw.githubusercontent.com/higgsfield-ai/cli/main/install.sh | sh"
+      ],
+      "deployOutputs": [
+        "/usr/local/bin/higgsfield",
+        "/usr/local/bin/higgs",
+        "/usr/local/bin/hf"
+      ]
+    }
+  },
+  "deploy": {
+    "aptPackages": ["ffmpeg"]
+  }
+}

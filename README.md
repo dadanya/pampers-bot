@@ -32,6 +32,15 @@ MEMORY_CONTEXT_MESSAGES=6
 
 `memory.db` тоже не в git — файл может быть большим и содержит историю переписки. На хостингах с эфемерной файловой системой (Railway без Volume и т.п.) база будет создаваться заново при каждом деплое, и долговременная память не переживёт рестарт. Чтобы сохранить существующую базу — подключите постоянный диск (например, Railway Volume), укажите его путь через `MEMORY_DB_PATH`, и один раз скопируйте туда локальный `memory.db` (например, через `railway ssh`).
 
+### Голосовые ответы на Railway (ffmpeg + Higgsfield CLI)
+
+`voice.py` вызывает `ffmpeg` и CLI `higgsfield` через subprocess — на голом Railway-контейнере их нет. Решение:
+
+- `railpack.json` — говорит Railway поставить `ffmpeg` на рантайме и собрать `higgsfield` CLI из официального install-скрипта при сборке.
+- `start.sh` (вызывается из `Procfile`) — перед запуском бота, если задана переменная `HIGGSFIELD_CREDENTIALS_JSON`, пишет её содержимое в `~/.config/higgsfield/credentials.json`, чтобы CLI сразу был авторизован (интерактивный `higgsfield auth login` в контейнере невозможен).
+
+Значение для `HIGGSFIELD_CREDENTIALS_JSON` — содержимое локального `~/.config/higgsfield/credentials.json` (или `%USERPROFILE%\.config\higgsfield\credentials.json` в Windows) одной строкой. Без этой переменной бот работает нормально, просто голосовые всегда падают в текст (штатный fallback).
+
 ## Импорт архива
 
 Команды запускаются в PowerShell из `E:\pampers-bot`:
