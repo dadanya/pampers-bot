@@ -94,7 +94,7 @@ class MemoryStoreTests(unittest.TestCase):
     def test_known_user_cannot_be_bound_to_a_second_telegram_id(self):
         user_id = self.store.upsert_user("Вовах")
         self.store.bind_telegram_identity(
-            user_id, 1001, "evilgeniusforever", "Вова"
+            user_id, 1001, "testuser_a", "Вова"
         )
 
         with self.assertRaises(ValueError):
@@ -104,7 +104,7 @@ class MemoryStoreTests(unittest.TestCase):
         first_user_id = self.store.upsert_user("Вовах")
         second_user_id = self.store.upsert_user("Маша")
         self.store.bind_telegram_identity(
-            first_user_id, 1001, "evilgeniusforever", "Вова"
+            first_user_id, 1001, "testuser_a", "Вова"
         )
 
         with self.assertRaises(ValueError):
@@ -139,10 +139,10 @@ class MemoryStoreTests(unittest.TestCase):
     def test_repeating_the_same_binding_updates_last_known_names(self):
         user_id = self.store.upsert_user("Вовах")
         first = self.store.bind_telegram_identity(
-            user_id, 1001, "evilgeniusforever", "Вова"
+            user_id, 1001, "testuser_a", "Вова"
         )
         second = self.store.bind_telegram_identity(
-            user_id, 1001, "EVILGENIUSFOREVER", "Вовах"
+            user_id, 1001, "TESTUSER_A", "Вовах"
         )
 
         self.assertEqual((first, second), (user_id, user_id))
@@ -156,13 +156,13 @@ class MemoryStoreTests(unittest.TestCase):
                 "ORDER BY alias_type, normalized_value",
                 (user_id,),
             ).fetchall()
-        self.assertEqual(row, (1001, "EVILGENIUSFOREVER", "Вовах"))
+        self.assertEqual(row, (1001, "TESTUSER_A", "Вовах"))
         self.assertEqual(
             aliases,
             [
                 ("display_name", "вова"),
                 ("display_name", "вовах"),
-                ("username", "evilgeniusforever"),
+                ("username", "testuser_a"),
             ],
         )
 
@@ -170,7 +170,7 @@ class MemoryStoreTests(unittest.TestCase):
         user_id = self.store.upsert_user("Вовах")
         self.assertIsNone(self.store.get_user_by_telegram_id(1001))
         self.store.bind_telegram_identity(
-            user_id, 1001, "evilgeniusforever", "Вовах"
+            user_id, 1001, "testuser_a", "Вовах"
         )
 
         self.assertEqual(
@@ -212,13 +212,13 @@ class MemoryStoreTests(unittest.TestCase):
         promoted_id = self.store.promote_telegram_identity(
             telegram_user_id=1001,
             canonical_name="Вовах",
-            username="evilgeniusforever",
+            username="testuser_a",
             display_name="Вовах",
         )
         repeated_id = self.store.promote_telegram_identity(
             telegram_user_id=1001,
             canonical_name="Вовах",
-            username="evilgeniusforever",
+            username="testuser_a",
             display_name="Вовах",
         )
 
@@ -250,7 +250,7 @@ class MemoryStoreTests(unittest.TestCase):
                 ("archive_name", "v0vah?"),
                 ("display_name", "вова"),
                 ("display_name", "вовах"),
-                ("username", "evilgeniusforever"),
+                ("username", "testuser_a"),
                 ("username", "temporary-name"),
             ],
         )
@@ -261,14 +261,14 @@ class MemoryStoreTests(unittest.TestCase):
         self.store.bind_telegram_identity(temporary_id, 1001, "temp", "Первый")
         target_id = self.store.upsert_user("Вовах")
         self.store.bind_telegram_identity(
-            target_id, 2002, "evilgeniusforever", "Второй"
+            target_id, 2002, "testuser_a", "Второй"
         )
 
         with self.assertRaises(ValueError):
             self.store.promote_telegram_identity(
                 telegram_user_id=1001,
                 canonical_name="Вовах",
-                username="evilgeniusforever",
+                username="testuser_a",
                 display_name="Вовах",
             )
 

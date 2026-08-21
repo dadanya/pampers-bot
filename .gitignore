@@ -11,3 +11,5 @@ tests/*.db
 *.log
 artifacts/
 voice_test/
+sender_aliases.json
+docs/superpowers/

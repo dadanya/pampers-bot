@@ -13,7 +13,22 @@ if TYPE_CHECKING:
     from memory import MemoryStore
 
 
-_LEGACY_SELF_REFERENCE = re.compile(r"@?allan_1215|allan|аллан", re.IGNORECASE)
+def _load_retired_handle_fragment() -> str:
+    import os
+
+    path = os.path.join(os.path.dirname(__file__), "sender_aliases.json")
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        handles = [re.escape(h) for h in data.get("retired_self_handles", [])]
+        return "".join(f"{h}|" for h in handles)
+    except Exception:
+        return ""
+
+
+_LEGACY_SELF_REFERENCE = re.compile(
+    r"@?(?:" + _load_retired_handle_fragment() + r"allan|аллан)", re.IGNORECASE
+)
 _TECHNICAL_CANONICAL_KEY = re.compile(r"telegram:\d+", re.IGNORECASE)
 _REPLACEMENT_REFERENCE = "другой человек"
 _UNKNOWN_CONVERSATION_PARTNER = "неизвестный собеседник"

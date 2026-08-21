@@ -289,7 +289,7 @@ class RelationshipSummaryTests(unittest.IsolatedAsyncioTestCase):
         )
 
         promoted_id = self.store.promote_telegram_identity(
-            991, "Вовах", "evilgeniusforever", "Вовах"
+            991, "Вовах", "testuser_a", "Вовах"
         )
         self.assertEqual(promoted_id, self.user_id)
         add_for(self.user_id, 20, "target")

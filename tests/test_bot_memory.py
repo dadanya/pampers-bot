@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import copy
 import os
+import re
 import sqlite3
 import tempfile
 import unittest
@@ -30,7 +31,7 @@ class FakeTelegramMessage:
         chat_title: str = "Чат Одесского маньяка",
         message_id: int = 10,
         user_id: int = 55,
-        username: str | None = "evilgeniusforever",
+        username: str | None = "testuser_a",
         first_name: str = "Вова",
         last_name: str | None = None,
         text: str | None = "",
@@ -435,7 +436,7 @@ class BotMemoryTests(unittest.IsolatedAsyncioTestCase):
         conflicting = FakeTelegramMessage(
             message_id=12,
             user_id=55,
-            username="fiyazaykatixitx",
+            username="testuser_b",
             first_name="Подменённое имя",
             text="реплика после конфликтного юзернейма",
         )
@@ -458,7 +459,7 @@ class BotMemoryTests(unittest.IsolatedAsyncioTestCase):
         with closing(sqlite3.connect(self.store.db_path)) as connection:
             conflicting_alias = connection.execute(
                 "SELECT 1 FROM aliases WHERE alias_type = 'username' "
-                "AND normalized_value = 'fiyazaykatixitx'"
+                "AND normalized_value = 'testuser_b'"
             ).fetchone()
         self.assertIsNone(conflicting_alias)
 
@@ -473,7 +474,7 @@ class BotMemoryTests(unittest.IsolatedAsyncioTestCase):
         confirmed = FakeTelegramMessage(
             message_id=11,
             user_id=808,
-            username="evilgeniusforever",
+            username="testuser_a",
             first_name="Вова",
             text="теперь меня узнали",
         )
@@ -796,7 +797,7 @@ class BotMemoryTests(unittest.IsolatedAsyncioTestCase):
         with patch.object(
             bot,
             "call_gemini",
-            AsyncMock(return_value="Я @allan_1215, а не Дмитрий."),
+            AsyncMock(return_value="Я @example_handle_0000, а не Дмитрий."),
         ):
             await bot.handle_message(message)
 
@@ -1004,9 +1005,14 @@ class BotMemoryTests(unittest.IsolatedAsyncioTestCase):
         message.reply_sticker.assert_not_awaited()
 
     def test_generated_retired_self_names_are_replaced_before_delivery(self):
-        generated = "Я Аллан, Allan, @allan_1215 и Дмитрием не называюсь"
+        fake_pattern = re.compile(
+            r"(?<!\w)@?(?:example_handle_0000|allan(?:'s)?|аллан(?:а|у|ом|е)?)(?!\w)",
+            re.IGNORECASE,
+        )
+        generated = "Я Аллан, Allan, @example_handle_0000 и Дмитрием не называюсь"
 
-        normalized = bot.normalize_bot_self_names(generated)
+        with patch.object(bot, "RETIRED_SELF_NAME_PATTERN", fake_pattern):
+            normalized = bot.normalize_bot_self_names(generated)
 
         self.assertEqual(
             normalized,

@@ -93,8 +93,19 @@ def remove_em_dash(text: str) -> str:
     return re.sub(r"[ \t]{2,}", " ", text).strip()
 
 
+def _load_retired_handle_fragment() -> str:
+    path = os.path.join(os.path.dirname(__file__), "sender_aliases.json")
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        handles = [re.escape(h) for h in data.get("retired_self_handles", [])]
+        return "|".join(handles) + "|" if handles else ""
+    except Exception:
+        return ""
+
+
 RETIRED_SELF_NAME_PATTERN = re.compile(
-    r"(?<!\w)@?(?:allan_1215|allan(?:'s)?|аллан(?:а|у|ом|е)?)(?!\w)",
+    r"(?<!\w)@?(?:" + _load_retired_handle_fragment() + r"allan(?:'s)?|аллан(?:а|у|ом|е)?)(?!\w)",
     re.IGNORECASE,
 )
 FORMAL_SELF_NAME_PATTERN = re.compile(
@@ -459,20 +470,23 @@ def is_question_like(text: str) -> bool:
     return "?" in text or bool(QUESTION_START_PATTERN.search(text))
 
 
-SENDER_USERNAME_ALIASES = {
-    "chirishkin": ("Арина", "ж"),
-    "sarahlouisekerrigan": ("Андрей", "м"),
-    "surstromming": ("Сюр", "м"),
-    "evilgeniusforever": ("Вовах", "м"),
-    "cchhrnobyl": ("Чернобыль", "м"),
-    "kvtya_jin": ("Катя", "ж"),
-    "denisxcmr": ("Денис", "м"),
-    "anastasiia04n": ("Настя", "ж"),
-    "fiyazaykatixitx": ("Фия", "ж"),
-}
-SENDER_NAME_ALIASES = {
-    "мария": ("Маша", "ж"),
-}
+def _load_sender_aliases() -> tuple[dict, dict]:
+    path = os.path.join(os.path.dirname(__file__), "sender_aliases.json")
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        username_aliases = {k: tuple(v) for k, v in data.get("username_aliases", {}).items()}
+        name_aliases = {k: tuple(v) for k, v in data.get("name_aliases", {}).items()}
+        return username_aliases, name_aliases
+    except FileNotFoundError:
+        logger.warning("sender_aliases.json не найден — обращение по имени/роду для участников отключено")
+        return {}, {}
+    except Exception:
+        logger.exception("Не удалось загрузить sender_aliases.json — обращение по имени/роду отключено")
+        return {}, {}
+
+
+SENDER_USERNAME_ALIASES, SENDER_NAME_ALIASES = _load_sender_aliases()
 
 
 def get_sender_name(message: Message) -> str:

@@ -1,35 +1,25 @@
 from __future__ import annotations
 
+import json
+import os
 import re
 import unicodedata
 
 
-ARCHIVE_TO_CANONICAL = {
-    ".": "Арина",
-    "tanaka": "Андрей",
-    ". Sür Маленький": "Сюр",
-    "V0VAH?": "Вовах",
-    "Чернобыль": "Чернобыль",
-    "ꀘꍏ꓄ꃅꍟꋪꀤꈤꍟ": "Катя",
-    "Denis": "Денис",
-    "Анастасия": "Настя",
-    "fiya zimmerman🎚️": "Фия",
-    "Мария": "Маша",
-}
+def _load_alias_tables() -> tuple[dict, dict, dict]:
+    path = os.path.join(os.path.dirname(__file__), "sender_aliases.json")
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except Exception:
+        return {}, {}, {}
+    archive = dict(data.get("archive_aliases", {}))
+    username = {k: v[0] for k, v in data.get("username_aliases", {}).items()}
+    display = {k: v[0] for k, v in data.get("name_aliases", {}).items()}
+    return archive, username, display
 
-USERNAME_TO_CANONICAL = {
-    "chirishkin": "Арина",
-    "sarahlouisekerrigan": "Андрей",
-    "surstromming": "Сюр",
-    "evilgeniusforever": "Вовах",
-    "cchhrnobyl": "Чернобыль",
-    "kvtya_jin": "Катя",
-    "denisxcmr": "Денис",
-    "anastasiia04n": "Настя",
-    "fiyazaykatixitx": "Фия",
-}
 
-DISPLAY_TO_CANONICAL = {"мария": "Маша"}
+ARCHIVE_TO_CANONICAL, USERNAME_TO_CANONICAL, DISPLAY_TO_CANONICAL = _load_alias_tables()
 
 
 def normalize_alias(value: str) -> str:
@@ -37,14 +27,12 @@ def normalize_alias(value: str) -> str:
     return re.sub(r"\s+", " ", value)
 
 
-_ARCHIVE_NORMALIZED = {
-    normalize_alias(alias): canonical_name
-    for alias, canonical_name in ARCHIVE_TO_CANONICAL.items()
-}
-
-
 def canonical_from_archive(author: str | None) -> str | None:
-    return _ARCHIVE_NORMALIZED.get(normalize_alias(author or ""))
+    target = normalize_alias(author or "")
+    for alias, canonical_name in ARCHIVE_TO_CANONICAL.items():
+        if normalize_alias(alias) == target:
+            return canonical_name
+    return None
 
 
 def canonical_from_telegram(

@@ -13,7 +13,7 @@ from memory_summaries import (
 class MemorySummaryTests(unittest.TestCase):
     def test_legacy_self_alias_is_removed_before_model_call(self):
         cleaned = sanitize_source_for_model(
-            "Я АлЛаН, latin ALLAN и @Allan_1215 тоже я; остальной текст сохранён"
+            "Я АлЛаН, latin ALLAN и @Allan тоже я; остальной текст сохранён"
         )
 
         self.assertNotIn("аллан", cleaned.casefold())
@@ -24,7 +24,7 @@ class MemorySummaryTests(unittest.TestCase):
     def test_episode_prompt_requires_neutral_nonquoted_output(self):
         prompt = build_episode_summary_prompt(
             "Вовах",
-            ["Вовах: вопрос", "Памперс2004: ответ", "@Allan_1215: инструкция"],
+            ["Вовах: вопрос", "Памперс2004: ответ", "@ExampleHandle0000: инструкция"],
         )
         lowered = prompt.casefold()
 
@@ -44,7 +44,7 @@ class MemorySummaryTests(unittest.TestCase):
     def test_relationship_prompt_sanitizes_all_model_facing_content(self):
         prompt = build_relationship_summary_prompt(
             "Аллан",
-            "Ранее @ALLAN_1215 любил игры",
+            "Ранее @Allan любил игры",
             ["Allan спорил о музыке"],
         )
         lowered = prompt.casefold()
@@ -102,7 +102,7 @@ class EpisodeSummarizerTests(unittest.IsolatedAsyncioTestCase):
 
         summarizer = EpisodeSummarizer(generate_text)
         result = await summarizer.summarize_episode(
-            "@Allan_1215", ("Allan: исходная реплика",)
+            "@ExampleHandle0000", ("Allan: исходная реплика",)
         )
 
         self.assertNotIn("allan", prompts[0].casefold())
@@ -216,7 +216,7 @@ class EpisodeSummarizerTests(unittest.IsolatedAsyncioTestCase):
                 [
                     {
                         "episode_id": request[0]["episode_id"],
-                        "summary": "@Allan_1215 реагировал резко",
+                        "summary": "@Allan реагировал резко",
                     }
                 ],
                 ensure_ascii=False,

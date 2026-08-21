@@ -1,0 +1,12 @@
+{
+  "username_aliases": {
+    "example_username": ["Имя", "ж"]
+  },
+  "name_aliases": {
+    "иван": ["Ваня", "м"]
+  },
+  "archive_aliases": {
+    "Example Display Name": "Ваня"
+  },
+  "retired_self_handles": ["old_handle_1234"]
+}
