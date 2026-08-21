@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "source_response_count": 181,
+  "median_words": 5,
+  "up_to_5_words_rate": 0.56353591160221,
+  "up_to_10_words_rate": 0.8232044198895028,
+  "profanity_rate": 0.30386740331491713,
+  "justification_rate": 0.11602209944751381,
+  "strategy_priority": [
+    "situational_mirror",
+    "contradiction",
+    "dismissal",
+    "absurd_bravado"
+  ],
+  "target_word_range": [
+    1,
+    11
+  ]
+}

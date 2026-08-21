@@ -1,0 +1,13 @@
+.env
+venv/
+__pycache__/
+*.pyc
+history.json
+memory.db
+memory.db-shm
+memory.db-wal
+memory.*.db
+tests/*.db
+*.log
+artifacts/
+voice_test/
